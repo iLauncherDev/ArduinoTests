@@ -8,7 +8,7 @@
 #define SPEAKER_FREQUENCY_MHZ (SPEAKER_FREQUENCY_HZ / 1000000)
 
 Adafruit_SSD1306 display(128, 64);
-char string[64];
+char string[256];
 
 uint32_t speaker_read()
 {
@@ -16,24 +16,15 @@ uint32_t speaker_read()
     uint32_t value = 0;
     for (uint8_t bits = 0; bits < SPEAKER_BITS; bits += SPEAKER_BITS_INC)
         value |= analogRead(port++) << bits;
-    return SPEAKER_FREQUENCY_HZ / (value ? value : 1);
+    return value ? SPEAKER_FREQUENCY_HZ / value : 0;
 }
 
 void speaker_write(uint32_t hz)
 {
     uint8_t port = SPEAKER_PORT;
-    if (hz)
-    {
-        uint32_t div = SPEAKER_FREQUENCY_HZ / hz;
-        for (uint8_t bits = 0; bits < SPEAKER_BITS; bits += SPEAKER_BITS_INC)
-            analogWrite(port++, (div >> bits) & 0xff);
-    }
-    else
-    {
-        uint32_t div = 0;
-        for (uint8_t bits = 0; bits < SPEAKER_BITS; bits += SPEAKER_BITS_INC)
-            analogWrite(port++, (div >> bits) & 0xff);
-    }
+    uint32_t div = hz ? SPEAKER_FREQUENCY_HZ / hz : 0;
+    for (uint8_t bits = 0; bits < SPEAKER_BITS; bits += SPEAKER_BITS_INC)
+        analogWrite(port++, (div >> bits) & 0xff);
 }
 
 void setup()
