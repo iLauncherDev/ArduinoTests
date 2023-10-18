@@ -2,7 +2,8 @@
 #include <Adafruit_SSD1306.h>
 #define SPEAKER_PORT 2
 #define SPEAKER_BITS 16
-#define SPEAKER_FREQUENCY_HZ 20000000
+#define SPEAKER_BITS_INC 8
+#define SPEAKER_FREQUENCY_HZ 25000000
 #define SPEAKER_FREQUENCY_KHZ (SPEAKER_FREQUENCY_HZ / 1000)
 #define SPEAKER_FREQUENCY_MHZ (SPEAKER_FREQUENCY_HZ / 1000000)
 
@@ -13,9 +14,9 @@ uint32_t speaker_read()
 {
     uint8_t port = SPEAKER_PORT;
     uint32_t value = 0;
-    for (uint8_t bits = 0; bits < SPEAKER_BITS; bits += 8)
+    for (uint8_t bits = 0; bits < SPEAKER_BITS; bits += SPEAKER_BITS_INC)
         value |= analogRead(port++) << bits;
-    return SPEAKER_FREQUENCY_HZ * value;
+    return SPEAKER_FREQUENCY_HZ / (value ? value : 1);
 }
 
 void speaker_write(uint32_t hz)
@@ -24,13 +25,13 @@ void speaker_write(uint32_t hz)
     if (hz)
     {
         uint32_t div = SPEAKER_FREQUENCY_HZ / hz;
-        for (uint8_t bits = 0; bits < SPEAKER_BITS; bits += 8)
+        for (uint8_t bits = 0; bits < SPEAKER_BITS; bits += SPEAKER_BITS_INC)
             analogWrite(port++, (div >> bits) & 0xff);
     }
     else
     {
         uint32_t div = 0;
-        for (uint8_t bits = 0; bits < SPEAKER_BITS; bits += 8)
+        for (uint8_t bits = 0; bits < SPEAKER_BITS; bits += SPEAKER_BITS_INC)
             analogWrite(port++, (div >> bits) & 0xff);
     }
 }
@@ -38,7 +39,6 @@ void speaker_write(uint32_t hz)
 void setup()
 {
     display.begin(2, 0x3C);
-    pinMode(2, OUTPUT);
     speaker_write(1000);
 }
 
