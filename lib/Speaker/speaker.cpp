@@ -17,15 +17,28 @@ speaker_t *sp_find_node(uint16_t port)
     return (speaker_t *)NULL;
 }
 
+uint8_t sp_bit2size(uint8_t bits, uint8_t bits_inc)
+{
+    uint8_t size = 0;
+    for (size = 0; size < bits; size += bits_inc)
+        if (bits + bits_inc > bits)
+            break;
+    return size;
+}
+
 uint32_t sp_read(uint8_t port)
 {
     speaker_t *tmp = sp_find_node(port);
     if (!tmp)
         return 0;
-    uint32_t value = 0;
-    for (uint8_t bits = 0; bits < tmp->bits; bits += 10)
-        value |= (analogRead(port++) << bits) & 0x3ff;
-    return value ? tmp->frequency / value : 0;
+    uint32_t hz = 0;
+    for (uint8_t bits = 0; bits < tmp->bits; bits += tmp->port_bits)
+    {
+        if (bits + tmp->port_bits > tmp->bits)
+            break;
+        hz |= (analogRead(port++) << bits) & tmp->max_value;
+    }
+    return hz;
 }
 
 void sp_write(uint8_t port, uint32_t hz)
@@ -33,12 +46,16 @@ void sp_write(uint8_t port, uint32_t hz)
     speaker_t *tmp = sp_find_node(port);
     if (!tmp)
         return;
-    uint32_t div = hz ? tmp->frequency / hz : 0;
-    for (uint8_t bits = 0; bits < tmp->bits; bits += 10)
-        analogWrite(port++, (div >> bits) & 0x3ff);
+    uint32_t value = hz;
+    for (uint8_t bits = 0; bits < tmp->bits; bits += tmp->port_bits)
+    {
+        if (bits + tmp->port_bits > tmp->bits)
+            break;
+        analogWrite(port++, (value >> bits) & tmp->max_value);
+    }
 }
 
-void sp_add_device(uint16_t port, uint32_t frequency, uint8_t bits)
+void sp_add_device(uint16_t port, uint32_t frequency, uint8_t port_bits, uint8_t bits)
 {
     speaker_t *tmp = sp_device;
     if (!sp_device)
@@ -47,13 +64,15 @@ void sp_add_device(uint16_t port, uint32_t frequency, uint8_t bits)
         memset(sp_device, 0, sizeof(speaker_t));
         sp_device->port = port;
         sp_device->frequency = frequency;
-        sp_device->bits = (bits / 10) * 10;
+        sp_device->port_bits = port_bits;
+        sp_device->bits = bits;
+        sp_device->max_value = (1 << port_bits) - 1;
     }
     else
     {
         while (tmp->next)
         {
-            if (tmp->port == port)
+            if (port >= tmp->port && port < tmp->port + sp_bit2size(tmp->bits, tmp->port_bits))
                 return;
             tmp = tmp->next;
         }
@@ -61,7 +80,9 @@ void sp_add_device(uint16_t port, uint32_t frequency, uint8_t bits)
         memset(tmp->next, 0, sizeof(speaker_t));
         tmp->next->port = port;
         tmp->next->frequency = frequency;
-        tmp->next->bits = (bits / 10) * 10;
+        tmp->next->port_bits = port_bits;
+        tmp->next->bits = bits;
+        tmp->next->max_value = (1 << port_bits) - 1;
         tmp->next->prev = tmp;
     }
 }
