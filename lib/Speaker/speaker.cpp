@@ -2,6 +2,17 @@
 
 speaker_t *sp_device = (speaker_t *)NULL;
 
+uint32_t sp_convert8888_XXXX(uint32_t value, uint16_t type)
+{
+    uint32_t new_value = 0;
+    for (uint8_t bits = 0; type; bits += 8)
+    {
+        new_value |= ((value >> bits) & 0xff) >> (8 - (type % 10));
+        type /= 10, bits += 8;
+    }
+    return new_value;
+}
+
 speaker_t *sp_find_node(uint16_t port)
 {
     if (sp_device)
@@ -46,7 +57,7 @@ void sp_write(uint8_t port, uint32_t hz)
     speaker_t *tmp = sp_find_node(port);
     if (!tmp)
         return;
-    uint32_t value = hz;
+    uint32_t value = sp_convert8888_XXXX(min(F_CPU, tmp->frequency) / hz, 888);
     for (uint8_t bits = 0; bits < tmp->bits; bits += tmp->port_bits)
     {
         if (bits + tmp->port_bits > tmp->bits)
