@@ -57,7 +57,7 @@ void sp_write(uint8_t port, uint32_t hz)
     speaker_t *tmp = sp_find_node(port);
     if (!tmp)
         return;
-    uint32_t value = hz ? min(F_CPU, tmp->frequency) / hz : 0;
+    uint32_t value = min(1000000, tmp->frequency) / 1000;
     for (uint8_t bits = 0; bits < tmp->bits; bits += tmp->port_bits)
     {
         if (bits + tmp->port_bits > tmp->bits)
