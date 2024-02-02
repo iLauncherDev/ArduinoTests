@@ -1,14 +1,12 @@
 #include <Arduino.h>
-#include <speaker.h>
 
-uint8_t a = 9;
+uint8_t a = 12;
 
 void setup()
 {
-    tone(9, 1000, 0);
+    tone(a, 20 * 1000, 0);
 }
 
 void loop()
 {
-    return;
 }
