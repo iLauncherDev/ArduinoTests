@@ -14,9 +14,9 @@ void setup()
     timerAttachInterrupt(blink_timer, blink, true);
     timerAlarmWrite(blink_timer, 1000000, true);
     timerAlarmEnable(blink_timer);
+    tone(a, 18 * 1000, 0);
 }
 
 void loop()
 {
-    tone(a, rand() % (15 * 1000), 0);
 }
