@@ -1,6 +1,6 @@
 {
-    "cmake.sourceDirectory": "/home/ilauncher/Documentos/GitHub/Arduino/lib/Adafruit_BusIO",
     "files.associations": {
-        "random": "cpp"
+        "random": "cpp",
+        "*.tcc": "cpp"
     }
 }
